@@ -434,3 +434,81 @@ const userSchema =
 
 export const User = model < IUser > ("User", userSchema);
 ```
+
+## 18-5 Referencing and Population in Mongoose
+
+- For Doing Referencing We will use mongodb ObjectId as it wi unique.
+- Referencing is like we will just store the id and through the id we will find out the refereed data.
+
+![alt text](image.png)
+
+- Interface
+
+```js
+import { Types } from "mongoose";
+
+export interface INotes {
+  userId: Types.ObjectId;
+}
+```
+
+- Model
+
+```js
+import { model, Schema } from "mongoose";
+import { INotes } from "../interfaces/note.interface";
+
+// 1. create schema
+const noteSchema = new Schema<INotes>({
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User", //It is the schema name we have provided
+      required: true,
+    },
+  },
+);
+
+// 2. Create Model
+export const Note = model<INotes>("Note", noteSchema);
+
+```
+
+### If We want to see the referenced data at a time we have to use populate
+
+- controller
+
+```js
+import { Request, Response } from "express";
+import { Note } from "../models/note.model";
+import express from "express";
+
+export const noteRoutes = express.Router();
+
+// get all notes
+noteRoutes.get("/", async (req: Request, res: Response) => {
+  const notes = await Note.find().populate("userId");
+
+  res.status(201).json({
+    success: true,
+    message: "Notes Retrieved Successfully !",
+    note: notes,
+  });
+});
+
+noteRoutes.get("/:noteId", async (req: Request, res: Response) => {
+  const noteId = req.params.noteId;
+  const note = await Note.findById(noteId).populate("userId");
+  // const note = await Note.findOne({ _id: noteId });
+
+  res.status(201).json({
+    success: true,
+    message: "Note Retrieved Successfully !",
+    note: note,
+  });
+});
+```
+
+![alt text](image-1.png)
+
+- This populate will show user data as well. As referenced it will fin the user id related data in the user collection and show the referenced data.
+- Referencing will reduce the data redundancy. I mean data repetition.
