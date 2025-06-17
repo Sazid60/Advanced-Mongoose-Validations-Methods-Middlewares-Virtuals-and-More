@@ -1,7 +1,20 @@
 import { model, Schema } from "mongoose";
-import { IUser } from "../interfaces/user.interface";
+import { IAddress, IUser } from "../interfaces/user.interface";
 import validator from "validator";
 
+// sub schema
+const addressSchema = new Schema<IAddress>(
+  {
+    city: { type: String },
+    street: { type: String },
+    zip: { type: Number },
+  },
+  {
+    _id: false, // as it is a SUB SCHEMA we will turn off the _id so that automated mongodb id do not get inserted.
+  }
+);
+
+// main schema
 const userSchema = new Schema<IUser>({
   firstName: {
     type: String,
@@ -45,6 +58,7 @@ const userSchema = new Schema<IUser>({
     },
     default: "USER",
   },
+  address: addressSchema, //using address sub schema here.
 });
 
 export const User = model<IUser>("User", userSchema);
