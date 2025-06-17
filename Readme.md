@@ -125,3 +125,66 @@ export const User = model < IUser > ("User", userSchema);
 ```
 
 #### Validation is like a middleware. It validates and if any error it do not allow to push the data to next stage.
+
+## 18-2 More About Built-in validation, Making Custom Validations & Third party Validator Package
+
+#### For mutation types we do no need to write validation error message.
+
+#### Custom Validations
+
+##### Validating Email using Builtin validator `match`
+
+```js
+  email: {
+    type: String,
+    required: [true, "Email is required."],
+    trim: true,
+    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    match: [/^\S+@\S+\.\S+$/, "Invalid email format. Got '{VALUE}'."],
+  },
+```
+
+##### Validating Email using Custom Validator
+
+```js
+email: {
+    type: String,
+    required: [true, "Email is required."],
+    trim: true,
+    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    validate: {
+      validator: function (value) {
+        return /^\S+@\S+\.\S+$/.test(value);
+      },
+      message: function (props) {
+        return `Email ${props.value} Is Not a Valid Email`;
+      },
+    },
+  },
+```
+
+##### Validating Email using Third Party Validator
+
+[Validator Js](https://www.npmjs.com/package/validator)
+
+1.  Install the validator
+
+```
+npm i validator
+```
+
+2. Install The Types Library
+
+```
+npm i --save-dev @types/validator
+```
+
+```js
+  email: {
+    type: String,
+    required: [true, "Email is required."],
+    trim: true,
+    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    validate: [validator.isEmail, "Provided Email Is Not Valid"],
+  },
+```
