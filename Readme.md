@@ -101,7 +101,7 @@ const userSchema =
       type: String,
       required: [true, "Email is required."],
       trim: true,
-      unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+      unique: [true, "Email must be unique. Email is already in use."],
       match: [/^\S+@\S+\.\S+$/, "Invalid email format. Got '{VALUE}'."],
     },
     password: {
@@ -139,7 +139,7 @@ export const User = model < IUser > ("User", userSchema);
     type: String,
     required: [true, "Email is required."],
     trim: true,
-    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    unique: [true, "Email must be unique. Email is already in use."],
     match: [/^\S+@\S+\.\S+$/, "Invalid email format. Got '{VALUE}'."],
   },
 ```
@@ -151,7 +151,7 @@ email: {
     type: String,
     required: [true, "Email is required."],
     trim: true,
-    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    unique: [true, "Email must be unique. Email is already in use."],
     validate: {
       validator: function (value) {
         return /^\S+@\S+\.\S+$/.test(value);
@@ -184,7 +184,67 @@ npm i --save-dev @types/validator
     type: String,
     required: [true, "Email is required."],
     trim: true,
-    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
+    unique: [true, "Email must be unique. Email is already in use."],
     validate: [validator.isEmail, "Provided Email Is Not Valid"],
   },
+```
+
+## 18-3 Validate using Zod
+
+- In traditional validations, even if a type is specified, values of other types are often implicitly converted to the specified type. Zod solves this problem by enforcing strict type checking without automatic type coercion.
+- Zod is a schema validation library. It validates only the schema.
+- We have some data type. The way we are creating schema we will create zod validation schema.This validation layer will work over mongoose validation layer.
+
+- When a use user sends a request It will be sent to zod. zod will validate the data inside body and then it will be send to mongoose validation layer. It increases safety and rush over mongoose as most of the validations will be done in ZOD.
+- As Zod do not require to connect with database to validate so it will reduce the operation time.
+
+- Zod do the validation ant the sanitization of the data first.
+
+1. Install Zod
+
+```
+npm install zod
+```
+
+- user.controller.ts
+
+```js
+import { Request, Response } from "express";
+import app from "../../app";
+import express from "express";
+import { User } from "../models/user.model";
+import { z } from "zod";
+
+export const usersRoutes = express.Router();
+
+const createUserZodSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  age: z.number(),
+  email: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+});
+usersRoutes.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const body = await createUserZodSchema.parseAsync(req.body);
+
+    console.log("Zod Body :", body);
+
+    const user = await User.create(body);
+
+    res.status(201).json({
+      success: true,
+      message: "Users Created Successfully !",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});
 ```

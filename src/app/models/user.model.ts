@@ -27,16 +27,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: [true, "Email is required."],
     trim: true,
-    unique: [true, "Email must be unique. '{VALUE}' is already in use."],
-    // match: [/^\S+@\S+\.\S+$/, "Invalid email format. Got '{VALUE}'."],
-    // validate: {
-    //   validator: function (value) {
-    //     return /^\S+@\S+\.\S+$/.test(value);
-    //   },
-    //   message: function (props) {
-    //     return `Email ${props.value} Is Not a Valid Email`;
-    //   },
-    // },
+    unique: [true, "Email must be unique. Email is already in use."],
     validate: [validator.isEmail, "Provided Email Is Not Valid"],
   },
   password: {
