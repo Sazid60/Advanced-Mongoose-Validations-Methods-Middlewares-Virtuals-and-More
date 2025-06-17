@@ -512,3 +512,105 @@ noteRoutes.get("/:noteId", async (req: Request, res: Response) => {
 
 - This populate will show user data as well. As referenced it will fin the user id related data in the user collection and show the referenced data.
 - Referencing will reduce the data redundancy. I mean data repetition.
+
+## 18-6 Built-in and Custom Instance Methods in Mongoose
+
+- Method we are using to create a user
+
+```js
+const user = await User.create(body);
+```
+
+- Another method of creating a user
+
+```js
+// another method of creating a user
+const user = new User(body);
+
+await user.save(); // here .save() function is a instance method
+```
+
+- Those are made based on User Model
+
+```js
+export const User = model < IUser > ("User", userSchema);
+```
+
+- This model is called builder or class
+- When a class is a blue print. using the blueprint when a building is made(object is created) then the building is called instance.
+
+![alt text](<Screenshot 2025-06-17 233309.png>)
+
+- Here Blueprint or object is created using `new Schema`
+- Here `model` is used to make a class or builder. I mean this will create a another instance/actual document(which will go to mongodb) based on the blueprint
+
+```js
+const user = new User(body); // here user is an instance of User class (instance itself is an object)
+await user.save(); // this is built in instance method as we are calling .save() function from the instance
+```
+
+#### Lets see we can make custom make instance method
+
+[Custom Instance Method](https://mongoosejs.com/docs/typescript/statics-and-methods.html)
+
+- Lets Do with practical example
+
+[bcrypt js](https://www.npmjs.com/package/bcryptjs)
+
+1. Install Bcrypt
+
+```
+npm i bcryptjs
+```
+
+- hashing a password in controller
+
+```js
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import express from "express";
+import { User } from "../models/user.model";
+import { z } from "zod";
+
+export const usersRoutes = express.Router();
+
+const createUserZodSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  age: z.number(),
+  email: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+});
+usersRoutes.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const zodBody = await createUserZodSchema.parseAsync(req.body);
+    const body = req.body;
+
+// hashing a password
+    const password = await bcrypt.hash(body.password, 10);
+    console.log(password);
+    body.password = password;
+// _______________________________________
+    const user = new User(body);
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Users Created Successfully !",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});
+
+```
+
+#### We wil do it in a custom instance method since we might need it further more times.
