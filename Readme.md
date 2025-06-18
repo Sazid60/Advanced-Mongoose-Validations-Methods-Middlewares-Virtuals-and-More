@@ -631,6 +631,7 @@ export interface IAddress {
   street: string;
   zip: number;
 }
+
 export interface IUser {
   firstName: string;
   lastName: string;
@@ -641,9 +642,9 @@ export interface IUser {
   address: IAddress;
 }
 
-// Custom Instance method Interface
-export interface userInstanceMethods {
-  hashPassword(password: string): string;
+// ✅ Add this for instance methods
+export interface UserInstanceMethods {
+  hashPassword(password: string): Promise<string>;
 }
 ```
 
@@ -681,6 +682,81 @@ const userSchema = new Schema<IUser, Model<IUser>, userInstanceMethods>
     // bla bla bla
   };
 
+  // creating a custom instance method for hashing password.
+userSchema.method("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+
 // ✅ CORRECT: Tell TypeScript this model has instance methods
 export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>("User",userSchema);
 ```
+
+- User.Controller.ts
+
+```js
+import { Request, Response } from "express";
+// import bcrypt from "bcryptjs";
+import express from "express";
+import { User } from "../models/user.model";
+import { z } from "zod";
+
+export const usersRoutes = express.Router();
+
+const createUserZodSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  age: z.number(),
+  email: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+});
+usersRoutes.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const zodBody = await createUserZodSchema.parseAsync(req.body);
+    const body = req.body;
+
+    // const user = await User.create(body);
+
+    // another method of creating a user
+    const user = new User(body);
+
+
+// hashing password using instance method
+    const password = await user.hashPassword(body.password);
+    console.log(password);
+
+    user.password = password;
+
+    await user.save();
+
+    // here .save() function is a instance method
+
+    res.status(201).json({
+      success: true,
+      message: "Users Created Successfully !",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});
+
+
+```
+
+#### Changes Required and Methods
+
+![alt text](image-3.png)
+
+![alt text](image-6.png)
+
+![alt text](image-2.png)
+
+![alt text](image-4.png)

@@ -3,6 +3,7 @@ export interface IAddress {
   street: string;
   zip: number;
 }
+
 export interface IUser {
   firstName: string;
   lastName: string;
@@ -13,7 +14,7 @@ export interface IUser {
   address: IAddress;
 }
 
-// Custom Instance method Interface
+// ✅ Add this for instance methods
 export interface UserInstanceMethods {
-  hashPassword(password: string): string;
+  hashPassword(password: string): Promise<string>;
 }

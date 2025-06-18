@@ -89,4 +89,7 @@ userSchema.method("hashPassword", async function (plainPassword: string) {
   return password;
 });
 
-export const User = model<IUser>("User", userSchema);
+export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
+  "User",
+  userSchema
+);
