@@ -86,6 +86,8 @@ const userSchema = new Schema<IUser, UserStaticMethods, UserInstanceMethods>(
   {
     versionKey: false,
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
@@ -113,7 +115,7 @@ userSchema.post("save", async function (doc, next) {
 
 //query middleware pre
 
-userSchema.post("find", async function (next) {
+userSchema.pre("find", async function (next) {
   console.log("Wow Pre Query Middleware");
   next();
 });
@@ -125,6 +127,11 @@ userSchema.post("findOneAndDelete", async function (doc, next) {
     await Note.deleteMany({ user: doc._id });
   }
   next();
+});
+
+// using virtuals
+userSchema.virtual("fullName").get(function () {
+  return `${this.firstName} ${this.lastName}`;
 });
 
 //
