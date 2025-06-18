@@ -689,8 +689,14 @@ userSchema.method("hashPassword", async function (plainPassword: string) {
 });
 
 
-// ✅ CORRECT: Tell TypeScript this model has instance methods
-export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>("User",userSchema);
+// method-1 (specialized for Instance method )
+// export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
+//   "User",
+//   userSchema
+// );
+
+// method-2 (specialized for Instance method as well )
+export const User = model("User", userSchema);
 ```
 
 - User.Controller.ts
@@ -760,3 +766,268 @@ usersRoutes.post("/create-user", async (req: Request, res: Response) => {
 ![alt text](image-2.png)
 
 ![alt text](image-4.png)
+
+## 18-8 Built-in and Custom Static Methods in Mongoose
+
+- Instance method and static method can exist together.
+- static method is more convenient to use more than instance method.because we do not need to create and call .save() function. we create in one line. `const user = await User.create(body);`
+- Sometime we do not need any Instance to work then Static method works fine but instance method is dependent and can not work.
+
+| Name    | Type     | Use Case                        |
+| ------- | -------- | ------------------------------- |
+| `model` | Function | To create a model from a schema |
+| `Model` | Type     | To type your schema/model in TS |
+
+- User Interface
+
+```js
+import { Model } from "mongoose";
+
+export interface IAddress {
+  city: string;
+  street: string;
+  zip: number;
+}
+export interface IUser {
+  firstName: string;
+  lastName: string;
+  age: number;
+  email: string;
+  password: string;
+  role: "USER" | "ADMIN" | "SUPERADMIN";
+  address: IAddress;
+}
+
+// Custom Instance method Interface
+export interface UserInstanceMethods {
+  hashPassword(password: string): string;
+}
+
+// Custom Static method Interface
+export interface UserStaticMethods extends Model<IUser> {
+  hashPassword(password: string): string;
+}
+```
+
+- User Model
+
+```js
+import { model, Model, Schema } from "mongoose";
+import {
+  IAddress,
+  IUser,
+  UserInstanceMethods,
+  UserStaticMethods,
+} from "../interfaces/user.interface";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+
+// sub schema
+const addressSchema = new Schema<IAddress>(
+  {
+    city: { type: String },
+    street: { type: String },
+    zip: { type: Number },
+  },
+  {
+    _id: false, // as it is a SUB SCHEMA we will turn off the _id so that automated mongodb id do not get inserted.
+  }
+);
+
+// main schema
+// for instance method
+// const userSchema = new Schema<IUser, Model<IUser>, UserInstanceMethods>
+
+// for static method ans instance method combined.if we want we can remove instance method as well
+const userSchema = new Schema<IUser, UserStaticMethods, UserInstanceMethods>(
+  {
+    firstName: {
+      type: String,
+      required: [true, "First name is required."],
+      trim: true,
+      minlength: [
+        3,
+        "First name must be at least 3 characters. Got '{VALUE}'.",
+      ],
+      maxlength: [
+        10,
+        "First name must not exceed 10 characters. Got '{VALUE}'.",
+      ],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Last name is required."],
+      trim: true,
+      minlength: [3, "Last name must be at least 3 characters. Got '{VALUE}'."],
+      maxlength: [
+        10,
+        "Last name must not exceed 10 characters. Got '{VALUE}'.",
+      ],
+    },
+    age: {
+      type: Number,
+      required: [true, "Age is required."],
+      min: [18, "Age must be at least 18. Got {VALUE}."],
+      max: [60, "Age must not exceed 60. Got {VALUE}."],
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required."],
+      trim: true,
+      unique: [true, "Email must be unique. Email is already in use."],
+      validate: [validator.isEmail, "Provided Email Is Not Valid"],
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required."],
+      lowercase: true,
+      minlength: [6, "Password must be at least 6 characters."],
+    },
+    role: {
+      type: String,
+      uppercase: true,
+      enum: {
+        values: ["USER", "ADMIN", "SUPERADMIN"],
+        message: "'{VALUE}' is not a supported role.",
+      },
+      default: "USER",
+    },
+    address: {
+      type: addressSchema,
+    }, //using address sub schema here.
+  },
+  {
+    versionKey: false,
+    timestamps: true,
+  }
+);
+
+// creating a custom instance method for hashing password.
+userSchema.method("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+// creating a custom Static method for hashing password.
+userSchema.static("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+// method-1 (specialized for Instance method )
+// export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
+//   "User",
+//   userSchema
+// );
+
+// method-2 (specialized for Instance method as well )
+export const User = model<IUser, UserStaticMethods>("User", userSchema);
+
+```
+
+- User Controller
+
+```js
+import { Request, Response } from "express";
+// import bcrypt from "bcryptjs";
+import express from "express";
+import { User } from "../models/user.model";
+import { z } from "zod";
+
+export const usersRoutes = express.Router();
+
+const createUserZodSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  age: z.number(),
+  email: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+});
+usersRoutes.post("/create-user", async (req: Request, res: Response) => {
+  try {
+    const zodBody = await createUserZodSchema.parseAsync(req.body);
+    const body = req.body;
+    // console.log("Zod Body :", body);
+    // const user = await User.create(body);
+    // const password = await bcrypt.hash(body.password, 10);
+    // console.log(password);
+    // body.password = password;
+
+    // another method of creating a user
+
+    // Builtin and custom instance method
+
+    // const user = new User(body);
+    // const password = await user.hashPassword(body.password);
+    // console.log(password);
+    // user.password = password;
+    // await user.save(); // here .save() function is a instance method
+
+    //  Builtin and Static Method
+
+    const password = await User.hashPassword(body.password);
+    body.password = password;
+    const user = await User.create(body);
+
+    res.status(201).json({
+      success: true,
+      message: "Users Created Successfully !",
+      user,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+});
+
+usersRoutes.patch("/:userId", async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const updatedUser = req.body;
+  const user = await User.findByIdAndUpdate(userId, updatedUser, { new: true });
+
+  res.status(201).json({
+    success: true,
+    message: "User Updated Successfully !",
+    user,
+  });
+});
+
+usersRoutes.get("/", async (req: Request, res: Response) => {
+  const users = await User.find();
+
+  res.status(201).json({
+    success: true,
+    message: "Users Retrieved Successfully !",
+    users,
+  });
+});
+
+usersRoutes.get("/:userId", async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+
+  const user = await User.findById(userId);
+
+  res.status(201).json({
+    success: true,
+    message: "User Retrieved Successfully !",
+    user,
+  });
+});
+
+usersRoutes.delete("/:userId", async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const user = await User.findByIdAndDelete(userId);
+
+  res.status(201).json({
+    success: true,
+    message: "User Deleted Successfully !",
+    user,
+  });
+});
+
+```

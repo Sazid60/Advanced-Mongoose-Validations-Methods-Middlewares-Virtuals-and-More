@@ -18,28 +18,27 @@ usersRoutes.post("/create-user", async (req: Request, res: Response) => {
   try {
     const zodBody = await createUserZodSchema.parseAsync(req.body);
     const body = req.body;
-
     // console.log("Zod Body :", body);
-
     // const user = await User.create(body);
-
     // const password = await bcrypt.hash(body.password, 10);
-
     // console.log(password);
-
     // body.password = password;
 
     // another method of creating a user
-    const user = new User(body);
 
+    // Builtin and custom instance method
+
+    // const user = new User(body);
+    // const password = await user.hashPassword(body.password);
     // console.log(password);
+    // user.password = password;
+    // await user.save(); // here .save() function is a instance method
 
-    const password = await user.hashPassword(body.password);
-    console.log(password);
+    //  Builtin and Static Method
 
-    user.password = password;
-
-    await user.save(); // here .save() function is a instance method
+    const password = await User.hashPassword(body.password);
+    body.password = password;
+    const user = await User.create(body);
 
     res.status(201).json({
       success: true,

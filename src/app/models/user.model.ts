@@ -3,6 +3,7 @@ import {
   IAddress,
   IUser,
   UserInstanceMethods,
+  UserStaticMethods,
 } from "../interfaces/user.interface";
 import validator from "validator";
 import bcrypt from "bcryptjs";
@@ -20,7 +21,11 @@ const addressSchema = new Schema<IAddress>(
 );
 
 // main schema
-const userSchema = new Schema<IUser, Model<IUser>, UserInstanceMethods>(
+// for instance method
+// const userSchema = new Schema<IUser, Model<IUser>, UserInstanceMethods>
+
+// for static method ans instance method combined.if we want we can remove instance method as well
+const userSchema = new Schema<IUser, UserStaticMethods, UserInstanceMethods>(
   {
     firstName: {
       type: String,
@@ -89,7 +94,17 @@ userSchema.method("hashPassword", async function (plainPassword: string) {
   return password;
 });
 
-export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
-  "User",
-  userSchema
-);
+// creating a custom Static method for hashing password.
+userSchema.static("hashPassword", async function (plainPassword: string) {
+  const password = await bcrypt.hash(plainPassword, 10);
+  return password;
+});
+
+// method-1 (specialized for Instance method )
+// export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
+//   "User",
+//   userSchema
+// );
+
+// method-2 (specialized for Instance method as well )
+export const User = model<IUser, UserStaticMethods>("User", userSchema);
