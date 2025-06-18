@@ -68,7 +68,34 @@ usersRoutes.patch("/:userId", async (req: Request, res: Response) => {
 });
 
 usersRoutes.get("/", async (req: Request, res: Response) => {
-  const users = await User.find();
+  const userEmail = req.query.email ? req.query.email : "";
+  console.log(userEmail);
+
+  let users = [];
+
+  // filtering
+
+  // if (userEmail) {
+  //   users = await User.find({ email: userEmail });
+  // } else {
+  //   users = await User.find();
+  // }
+
+  // sorting
+  // users = await User.find().sort({ "email": "asc" });
+  // or
+  // users = await User.find().sort({ email: "ascending" });
+  // users = await User.find().sort({ "email": 1 });
+  // or
+  // users = await User.find().sort({ "email": "descending" });
+  // users = await User.find().sort({ "email": -1 });
+
+  // skipping
+  // users = await User.find().skip(7);
+
+  // limiting
+
+  users = await User.find().limit(2);
 
   res.status(201).json({
     success: true,

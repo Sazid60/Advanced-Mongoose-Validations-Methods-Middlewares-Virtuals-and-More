@@ -1590,3 +1590,100 @@ userSchema.virtual("fullName").get(function () {
 export const User = model<IUser, UserStaticMethods>("User", userSchema);
 
 ```
+
+## 18-12 Filter, Sort, Skip, Limit in Mongoose And Module Summary
+
+#### Filter
+
+```js
+usersRoutes.get("/", async (req: Request, res: Response) => {
+  const userEmail = req.query.email ? req.query.email : "";
+  console.log(userEmail);
+
+  let users = [];
+  if (userEmail) {
+    users = await User.find({ email: userEmail });
+  } else {
+    users = await User.find();
+  }
+
+  res.status(201).json({
+    success: true,
+    message: "Users Retrieved Successfully !",
+    users,
+  });
+});
+```
+
+![alt text](image-10.png)
+
+#### Sort In Mongoose
+
+[Sort In Mongoose](<https://mongoosejs.com/docs/api/query.html#Query.prototype.sort()>)
+
+```js
+usersRoutes.get("/", async (req: Request, res: Response) => {
+  const userEmail = req.query.email ? req.query.email : "";
+  console.log(userEmail);
+
+  let users = [];
+  // users = await User.find().sort({ "email": "asc" });
+  // or
+  users = await User.find().sort({ email: "ascending" });
+  // users = await User.find().sort({ "email": 1 });
+  // or
+  // users = await User.find().sort({ "email": "descending" });
+  // users = await User.find().sort({ "email": -1 });
+
+  res.status(201).json({
+    success: true,
+    message: "Users Retrieved Successfully !",
+    users,
+  });
+});
+```
+
+#### skip In Mongoose
+
+```js
+usersRoutes.get("/", async (req: Request, res: Response) => {
+  const userEmail = req.query.email ? req.query.email : "";
+  console.log(userEmail);
+
+  let users = [];
+
+  // skipping
+  users = await User.find().skip(7);
+
+  res.status(201).json({
+    success: true,
+    message: "Users Retrieved Successfully !",
+    users,
+  });
+});
+```
+
+#### limit In Mongoose
+
+```js
+usersRoutes.get("/", async (req: Request, res: Response) => {
+  const userEmail = req.query.email ? req.query.email : "";
+  console.log(userEmail);
+
+  let users = [];
+
+  // limiting
+
+  users = await User.find().limit(2);
+
+  res.status(201).json({
+    success: true,
+    message: "Users Retrieved Successfully !",
+    users,
+  });
+});
+```
+
+#### Query Methods
+
+[Mongoose Query Methods](https://mongoosejs.com/docs/api/query.html)
