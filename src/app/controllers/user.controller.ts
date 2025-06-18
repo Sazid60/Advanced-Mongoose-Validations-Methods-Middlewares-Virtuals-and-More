@@ -91,7 +91,7 @@ usersRoutes.get("/:userId", async (req: Request, res: Response) => {
 
 usersRoutes.delete("/:userId", async (req: Request, res: Response) => {
   const userId = req.params.userId;
-  const user = await User.findByIdAndDelete(userId);
+  const user = await User.findOneAndDelete({ _id: userId });
 
   res.status(201).json({
     success: true,

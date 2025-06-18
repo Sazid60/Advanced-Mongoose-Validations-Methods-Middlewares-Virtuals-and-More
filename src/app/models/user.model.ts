@@ -7,6 +7,7 @@ import {
 } from "../interfaces/user.interface";
 import validator from "validator";
 import bcrypt from "bcryptjs";
+import { Note } from "./note.model";
 
 // sub schema
 const addressSchema = new Schema<IAddress>(
@@ -101,12 +102,32 @@ userSchema.static("hashPassword", async function (plainPassword: string) {
 });
 
 // pre hook for hashing (instead of static and instance)
-userSchema.pre("save", async function () {
+userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
-userSchema.post("save", async function (doc) {
+userSchema.post("save", async function (doc, next) {
   console.log(`${doc.email} has been saved`);
+  next();
 });
+
+//query middleware pre
+
+userSchema.post("find", async function (next) {
+  console.log("Wow Pre Query Middleware");
+  next();
+});
+
+//query middleware post
+userSchema.post("findOneAndDelete", async function (doc, next) {
+  if (doc) {
+    console.log(doc);
+    await Note.deleteMany({ user: doc._id });
+  }
+  next();
+});
+
+//
 
 // method-1 (specialized for Instance method )
 // export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>(
