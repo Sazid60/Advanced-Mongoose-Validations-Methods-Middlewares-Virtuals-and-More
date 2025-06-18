@@ -1031,3 +1031,65 @@ usersRoutes.delete("/:userId", async (req: Request, res: Response) => {
 });
 
 ```
+
+## 18-9 Middleware in Mongoose: Pre and Post Hooks
+
+[Middleware](https://mongoosejs.com/docs/middleware.html)
+
+- Middleware can operate in two state.(Middlewares are also called hooks)
+  1. Before doing Operation (pre hook)
+  2. After doing Operation (post Hook)
+- Validation is one kind of pre hook middleware.
+
+#### Types Of Middleware
+
+- we get 4 types of mongoose middleware
+
+  1. **Document Middleware**
+     Works when doing these operations :
+
+  - validate
+  - save
+  - updateOne
+  - deleteOne
+  - init (note: init hooks are synchronous)
+
+  2. **Model Middleware**
+     Works when doing these operations :
+
+  - bulkWrite
+  - createCollection
+  - insertMany
+
+  3. **Aggregate Middleware**
+
+     Works when doing these operations :
+
+  - aggregate
+
+  1. **Query Middleware**
+     Works when doing these operations :
+
+  - count
+  - countDocuments
+  - deleteMany
+  - deleteOne
+  - estimatedDocumentCount
+  - find
+  - findOne
+  - findOneAndDelete
+  - findOneAndReplace
+  - findOneAndUpdate
+  - replaceOne
+  - updateOne
+  - updateMany
+  - validate
+
+#### Lets Make a Custom Pre and Post Hook For Our Project
+
+- We will use pre hook for hashing a password before saving a password.
+- Hooks are written in Model File
+
+```js
+
+```
