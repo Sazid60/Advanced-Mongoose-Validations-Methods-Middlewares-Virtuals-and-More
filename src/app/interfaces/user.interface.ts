@@ -12,3 +12,8 @@ export interface IUser {
   role: "USER" | "ADMIN" | "SUPERADMIN";
   address: IAddress;
 }
+
+// Custom Instance method Interface
+export interface UserInstanceMethods {
+  hashPassword(password: string): string;
+}

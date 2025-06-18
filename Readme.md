@@ -537,12 +537,18 @@ export const User = model < IUser > ("User", userSchema);
 ```
 
 - This model is called builder or class
-- When a class is a blue print. using the blueprint when a building is made(object is created) then the building is called instance.
+- Class is a blue print. using the blueprint when a building is made(object is created) then the building is called instance.
 
 ![alt text](<Screenshot 2025-06-17 233309.png>)
 
-- Here Blueprint or object is created using `new Schema`
-- Here `model` is used to make a class or builder. I mean this will create a another instance/actual document(which will go to mongodb) based on the blueprint
+- Here Blueprint or object or instance is created using `new Schema`
+- Here `model` is used to make a class or builder. I mean this will create a another instance/actual document(which will go to mongodb) based on the blueprint/object/instance
+
+```js
+export const User = model < IUser > ("User", userSchema);
+```
+
+- Here User is the builder.
 
 ```js
 const user = new User(body); // here user is an instance of User class (instance itself is an object)
@@ -614,3 +620,67 @@ usersRoutes.post("/create-user", async (req: Request, res: Response) => {
 ```
 
 #### We wil do it in a custom instance method since we might need it further more times.
+
+## 18-7 More About Instance Method
+
+- First create a interface
+
+```js
+export interface IAddress {
+  city: string;
+  street: string;
+  zip: number;
+}
+export interface IUser {
+  firstName: string;
+  lastName: string;
+  age: number;
+  email: string;
+  password: string;
+  role: "USER" | "ADMIN" | "SUPERADMIN";
+  address: IAddress;
+}
+
+// Custom Instance method Interface
+export interface userInstanceMethods {
+  hashPassword(password: string): string;
+}
+```
+
+- We have some update in Schema Definition. Now we have to define 3 parameters inside schema. `new Schema<IUser, Model<IUser>, userInstanceMethods>`
+
+- Before Introducing Custom Static Method
+
+```js
+import { model, Schema } from "mongoose";
+import { IAddress, IUser } from "../interfaces/user.interface";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+
+// main schema
+const userSchema =
+  new Schema() <
+  IUser >
+  {
+    // bla bla bla
+  };
+
+export const User = model < IUser > ("User", userSchema);
+```
+
+- After Introducing Static Method
+
+```js
+import { model, Schema } from "mongoose";
+import { IAddress, IUser } from "../interfaces/user.interface";
+import validator from "validator";
+
+// main schema. NOW IT TAKES 3 PROPERTIES
+const userSchema = new Schema<IUser, Model<IUser>, userInstanceMethods>
+  {
+    // bla bla bla
+  };
+
+// ✅ CORRECT: Tell TypeScript this model has instance methods
+export const User = model<IUser, Model<IUser, {}, UserInstanceMethods>>("User",userSchema);
+```
